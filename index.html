@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="A Diwali greeting from Yuvie & Neha in Sydney to Mum & Dad in Johannesburg.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Diyas Across the Ocean</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Nunito:wght@400;600;700&display=swap">
+<style>
+/* Layout: one full-screen stage, scenes stacked and shown one at a time; a canvas behind everything draws sky, globe, fireworks. Single deliberate night theme. */
+:root{
+  --night:#0a0920; --night2:#1a1240; --dusk:#3a1e5a;
+  --marigold:#ffb340; --flame:#ff6a1a; --ember:#ff3d00; --rose:#d63a8a;
+  --cream:#fff2d6; --cream-dim:rgba(255,242,214,.72);
+  --display:'Marcellus',Georgia,'Times New Roman',serif;
+  --body:'Nunito','Segoe UI',system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--night);color:var(--cream);font-family:var(--body);overflow:hidden;-webkit-tap-highlight-color:transparent}
+#stage{position:relative;height:100%;width:100%;overflow:hidden}
+#sky{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 28px;
+  opacity:0;pointer-events:none;transition:opacity .9s ease}
+.scene.on{opacity:1;pointer-events:auto}
+h1,h2{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(2rem,8vw,3.6rem);line-height:1.05;text-align:center;text-shadow:0 0 30px rgba(255,179,64,.45)}
+h2{font-size:clamp(1.4rem,5.5vw,2.4rem);text-align:center;text-shadow:0 0 24px rgba(255,179,64,.4)}
+.eyebrow{font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;color:var(--marigold);text-align:center}
+.lead{font-size:1.05rem;line-height:1.5;color:var(--cream-dim);text-align:center;max-width:34ch;margin:0}
+.btn{appearance:none;border:0;cursor:pointer;font:600 1rem var(--body);color:#2a1400;background:linear-gradient(180deg,#ffd27a,var(--marigold));
+  padding:.95rem 1.7rem;border-radius:999px;box-shadow:0 0 0 1px rgba(255,210,122,.6) inset,0 10px 30px rgba(255,140,0,.35);transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid var(--cream);outline-offset:3px}
+.btn.ghost{background:transparent;color:var(--cream);box-shadow:0 0 0 1px rgba(255,242,214,.4) inset}
+.stack{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:520px}
+.char{position:absolute;max-width:100%;pointer-events:none;filter:drop-shadow(0 0 28px rgba(255,150,40,.35)) drop-shadow(0 14px 18px rgba(0,0,0,.55))}
+.skyline{position:absolute;left:0;right:0;bottom:0;width:100%;height:auto;pointer-events:none}
+.bubble{position:absolute;background:var(--cream);color:#2a1400;font-weight:600;padding:.6rem .9rem;border-radius:18px;font-size:.95rem;max-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transform:translateY(8px);transition:opacity .6s,transform .6s}
+.bubble.show{opacity:1;transform:none}
+.bubble::after{content:"";position:absolute;bottom:-9px;left:28px;border:10px solid transparent;border-top-color:var(--cream);border-bottom:0}
+/* Diya */
+.diya{position:absolute;width:64px;height:64px;pointer-events:none;transform:translate(-50%,-70%)}
+.diya .bowl{position:absolute;left:4px;right:4px;bottom:10px;height:22px;border-radius:0 0 30px 30px/0 0 22px 22px;background:linear-gradient(180deg,#c9642a,#7a3412);box-shadow:inset 0 3px 0 rgba(255,200,140,.35)}
+.diya .rim{position:absolute;left:0;right:0;bottom:30px;height:10px;border-radius:50%;background:radial-gradient(ellipse at 50% 40%,#ffb340 0,#c9642a 55%,#8a3d14 100%)}
+.diya .flame{position:absolute;left:50%;bottom:34px;width:14px;height:26px;margin-left:-7px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:radial-gradient(ellipse at 50% 80%,#fff6cf 0,#ffd04a 35%,#ff7a1a 70%,rgba(255,80,0,0) 100%);transform-origin:50% 100%;opacity:0;transform:scaleY(.2)}
+.diya .glow{position:absolute;left:50%;bottom:20px;width:140px;height:140px;margin-left:-70px;border-radius:50%;background:radial-gradient(circle,rgba(255,170,60,.45) 0,rgba(255,120,20,.15) 40%,rgba(255,120,20,0) 70%);opacity:0;transition:opacity 1s}
+.diya.lit .flame{opacity:1;animation:flicker 1.2s ease-in-out infinite alternate}
+.diya.lit .glow{opacity:1}
+@keyframes flicker{0%{transform:scaleY(1) rotate(-3deg)}40%{transform:scaleY(1.12) rotate(2deg)}100%{transform:scaleY(.95) rotate(-2deg)}}
+.hint{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:var(--marigold);background:rgba(10,9,32,.55);padding:.4rem .9rem;border-radius:999px;white-space:nowrap}
+.km{font-family:var(--display);font-size:clamp(2.6rem,12vw,5rem);font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 0 40px rgba(255,179,64,.5)}
+.km small{display:block;font:600 .8rem var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--marigold);margin-top:6px}
+.cities{display:flex;justify-content:space-between;width:100%;max-width:420px;font-size:.85rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cream-dim)}
+#mute{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:5;background:rgba(10,9,32,.6);border:1px solid rgba(255,242,214,.3);color:var(--cream);border-radius:999px;width:42px;height:42px;font-size:1.1rem;cursor:pointer;display:none}
+#mute:focus-visible{outline:2px solid var(--cream)}
+.msgcard{background:rgba(10,9,32,.72);backdrop-filter:blur(6px);border:1px solid rgba(255,179,64,.35);border-radius:22px;padding:22px 22px 24px;max-width:460px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+.msgcard p{margin:0;font-size:1.05rem;line-height:1.55}
+.sig{font-family:var(--display);font-size:1.5rem;color:var(--marigold)}
+.pair{position:absolute;left:0;right:0;top:calc(8px + env(safe-area-inset-top,0px));display:flex;justify-content:center;align-items:flex-end;gap:0;pointer-events:none}
+.pair img{max-height:min(34vh,300px);max-width:48%;width:auto;height:auto;object-fit:contain;filter:drop-shadow(0 0 28px rgba(255,150,40,.4))}
+.rangoli{position:absolute;left:50%;bottom:-40px;width:min(120vw,620px);height:min(120vw,620px);transform:translateX(-50%);opacity:0;transition:opacity 2s;pointer-events:none}
+.rangoli.show{opacity:.55}
+.fade{animation:fadeup 1s ease both}
+@keyframes fadeup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.vwrap{position:absolute;inset:0;z-index:6;background:#07061a;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .8s}
+.vwrap.on{opacity:1}
+.vwrap video{width:100%;height:100%;object-fit:cover}
+@media (min-aspect-ratio:1/1){.vwrap video{object-fit:contain}}
+@media (prefers-reduced-motion:reduce){.diya.lit .flame{animation:none}.fade{animation:none}.scene{transition:none}}
+</style>
+
+</head>
+<body>
+<div id="stage">
+  <canvas id="sky"></canvas>
+  <canvas id="fx" style="position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none"></canvas>
+  <div class="vwrap" id="vwrap"><video id="vid" playsinline muted preload="none"></video></div>
+  <button id="mute" aria-label="Mute sound" title="Mute">♪</button>
+
+  <!-- 0 · Intro -->
+  <section class="scene on" id="s-intro" style="justify-content:center">
+    <div class="stack">
+      <div class="eyebrow">Diwali 2026</div>
+      <h1>Diyas Across<br>the Ocean</h1>
+      <p class="lead">A little light sent from Sydney to Johannesburg. Turn your sound on.</p>
+      <button class="btn" id="start">Begin</button>
+    </div>
+  </section>
+
+  <!-- 1 · Sydney -->
+  <section class="scene" id="s-sydney">
+    <div class="hint">Sydney, Australia</div>
+    <svg class="skyline" viewBox="0 0 800 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="sail" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2d6"/><stop offset="1" stop-color="#b89a7a"/></linearGradient>
+        <radialGradient id="moon"><stop offset="0" stop-color="#fff6dc"/><stop offset="1" stop-color="#ffd27a"/></radialGradient>
+      </defs>
+      <circle cx="700" cy="60" r="22" fill="url(#moon)" opacity=".95"/>
+      <!-- harbour water -->
+      <rect x="0" y="236" width="800" height="64" fill="#0d0b2a"/>
+      <!-- bridge: arch, deck, hangers, pylons -->
+      <path d="M-20 236 Q 400 -90 820 236" fill="none" stroke="#2a2060" stroke-width="14"/>
+      <path d="M-20 236 Q 400 -90 820 236" fill="none" stroke="#5a4a9a" stroke-width="5"/>
+      <path d="M20 236 Q 400 -40 780 236" fill="none" stroke="#3a2d70" stroke-width="3"/>
+      <line x1="0" y1="200" x2="800" y2="200" stroke="#5a4a9a" stroke-width="9"/>
+      <line x1="0" y1="196" x2="800" y2="196" stroke="#ffd27a" stroke-width="1.5" opacity=".8"/>
+      <g stroke="#4a3b88" stroke-width="2.5">
+        <line x1="100" y1="200" x2="100" y2="130"/><line x1="160" y1="200" x2="160" y2="92"/><line x1="220" y1="200" x2="220" y2="64"/><line x1="280" y1="200" x2="280" y2="46"/><line x1="340" y1="200" x2="340" y2="36"/><line x1="400" y1="200" x2="400" y2="33"/><line x1="460" y1="200" x2="460" y2="36"/><line x1="520" y1="200" x2="520" y2="46"/><line x1="580" y1="200" x2="580" y2="64"/><line x1="640" y1="200" x2="640" y2="92"/><line x1="700" y1="200" x2="700" y2="130"/>
+      </g>
+      <!-- string lights along the arch -->
+      <g fill="#ffd27a">
+        <circle cx="60" cy="207" r="2.6"/><circle cx="100" cy="166" r="2.6"/><circle cx="140" cy="130" r="2.6"/><circle cx="180" cy="99" r="2.6"/><circle cx="220" cy="74" r="2.6"/><circle cx="260" cy="55" r="2.6"/><circle cx="300" cy="42" r="2.6"/><circle cx="340" cy="34" r="2.6"/><circle cx="380" cy="31" r="2.6"/><circle cx="420" cy="31" r="2.6"/><circle cx="460" cy="34" r="2.6"/><circle cx="500" cy="42" r="2.6"/><circle cx="540" cy="55" r="2.6"/><circle cx="580" cy="74" r="2.6"/><circle cx="620" cy="99" r="2.6"/><circle cx="660" cy="130" r="2.6"/><circle cx="700" cy="166" r="2.6"/><circle cx="740" cy="207" r="2.6"/>
+      </g>
+      <rect x="36" y="150" width="30" height="90" fill="#2a2060" stroke="#5a4a9a" stroke-width="2"/><rect x="734" y="150" width="30" height="90" fill="#2a2060" stroke="#5a4a9a" stroke-width="2"/>
+      <!-- opera house, lit -->
+      <g fill="url(#sail)" stroke="#6a5a9a" stroke-width="1.5">
+        <path d="M610 238 Q 648 150 712 226 L 712 238 Z"/>
+        <path d="M665 238 Q 712 140 790 224 L 790 238 Z"/>
+        <path d="M730 238 Q 778 160 830 232 L 830 238 Z"/>
+        <path d="M570 238 Q 598 185 640 232 L 640 238 Z"/>
+      </g>
+      <rect x="560" y="232" width="280" height="10" fill="#3a2d70"/>
+      <!-- skyline left -->
+      <g fill="#1a1240">
+        <rect x="0" y="150" width="34" height="90"/><rect x="60" y="178" width="24" height="60"/><rect x="88" y="160" width="36" height="80"/><rect x="128" y="188" width="22" height="50"/>
+      </g>
+      <g fill="#ffd27a" opacity=".55"><rect x="6" y="160" width="4" height="5"/><rect x="18" y="172" width="4" height="5"/><rect x="94" y="170" width="4" height="5"/><rect x="108" y="184" width="4" height="5"/><rect x="100" y="198" width="4" height="5"/></g>
+      <!-- water reflections -->
+      <g stroke="#ffd27a" stroke-width="1.5" opacity=".35"><line x1="640" y1="252" x2="700" y2="252"/><line x1="680" y1="264" x2="760" y2="264"/><line x1="300" y1="256" x2="380" y2="256"/><line x1="120" y1="262" x2="170" y2="262"/></g>
+      <!-- balcony -->
+      <rect x="0" y="268" width="800" height="32" fill="#1a1240"/>
+      <rect x="0" y="264" width="800" height="6" fill="#5a4a9a"/>
+    </svg>
+    <img class="char" id="couple" src="img/couple.png" alt="Yuvie and Neha holding diyas" style="bottom:12%;left:34%;transform:translateX(-50%);height:min(42vh,400px);width:auto">
+    <div class="bubble" id="b1" style="bottom:calc(12% + min(42vh,400px) - 10px);left:calc(34% - 120px)">Happy Diwali from Sydney!</div>
+    <div class="diya" id="d-syd" style="left:34%;bottom:7%;transform:translate(-50%,0) scale(1.4)"><div class="glow"></div><div class="bowl"></div><div class="rim"></div><div class="flame"></div></div>
+    <div class="stack" style="position:relative;z-index:2">
+      <button class="btn" id="light1">Tap to light our diya</button>
+    </div>
+  </section>
+
+  <!-- 2 · Journey -->
+  <section class="scene" id="s-journey">
+    <div class="hint">The flame is on its way</div>
+    <div class="stack">
+      <div class="km" id="km">0<small>kilometres</small></div>
+      <div class="cities"><span>Sydney</span><span>Johannesburg</span></div>
+    </div>
+  </section>
+
+  <!-- 3 · Johannesburg -->
+  <section class="scene" id="s-joburg">
+    <div class="hint" id="jhint">Johannesburg, South Africa</div>
+    <canvas id="jcity" class="skyline" aria-hidden="true"></canvas>
+    <img class="char" id="parents" src="img/parents.png" alt="Mum and Dad holding diyas" style="bottom:18%;left:36%;transform:translateX(-50%);height:min(38vh,360px);width:auto">
+    <div class="bubble" id="b2" style="bottom:calc(18% + min(38vh,360px) - 6px);left:calc(36% - 130px)">The light made it home.</div>
+    <div class="diya" id="d-jnb" style="left:36%;bottom:13%;transform:translate(-50%,0) scale(1.4)"><div class="glow"></div><div class="bowl"></div><div class="rim"></div><div class="flame"></div></div>
+    <div id="diyas" style="position:absolute;inset:0;z-index:2"></div>
+    <div class="stack" style="position:relative;z-index:3">
+      <button class="btn" id="receive" hidden>Tap to receive the light</button>
+      <button class="btn" id="lightall" hidden>Light them all</button>
+    </div>
+  </section>
+
+  <!-- 4 · Message -->
+  <section class="scene" id="s-message">
+    <svg class="rangoli" id="rangoli" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+    <div class="pair"><img src="img/couple.png" alt=""><img src="img/parents.png" alt=""></div>
+    <div class="msgcard fade" id="card">
+      <div class="eyebrow">Happy Diwali</div>
+      <h2>Happy Diwali, Mum &amp; Dad</h2>
+      <p>11,044 km between Sydney and Joburg, but distance doesn't change a thing. Wishing you both a Diwali full of light, laughter and good food. We miss you and we love you.</p>
+      <div class="sig">With all our love, Yuvie &amp; Neha</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <a class="btn" style="text-decoration:none" href="https://wa.me/?text=We%20lit%20a%20diya%20for%20you%20too%20%F0%9F%AA%94%20Happy%20Diwali%20Yuvie%20%26%20Neha%2C%20love%20Mum%20%26%20Dad" target="_blank" rel="noopener">Send a diya back</a>
+        <button class="btn ghost" id="replay">Watch again</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage=$('#stage'), cv=$('#sky'), ctx=cv.getContext('2d'), fxc=$('#fx'), fctx=fxc.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=stage.clientWidth;H=stage.clientHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);fxc.width=W*DPR;fxc.height=H*DPR;fctx.setTransform(DPR,0,0,DPR,0,0);drawJoburg();}
+addEventListener('resize',resize);
+
+/* ---------- Audio (all synthesised, no files) ---------- */
+let AC=null, master=null, droneGain=null, muted=false;
+function audioInit(){
+  if(AC) return;
+  AC=new (window.AudioContext||window.webkitAudioContext)();
+  master=AC.createGain(); master.gain.value=.9; master.connect(AC.destination);
+  // Tanpura-like drone: Sa, Pa, Sa' with slow shimmer
+  droneGain=AC.createGain(); droneGain.gain.value=0; droneGain.connect(master);
+  const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900; lp.Q.value=.7; lp.connect(droneGain);
+  [[138.59,.5],[207.65,.32],[277.18,.22],[69.3,.25]].forEach(([f,g],i)=>{
+    const o=AC.createOscillator(); o.type=i===3?'sine':'sawtooth'; o.frequency.value=f;
+    const gg=AC.createGain(); gg.gain.value=g*.18;
+    const lfo=AC.createOscillator(); lfo.frequency.value=.08+i*.05; const lg=AC.createGain(); lg.gain.value=g*.06;
+    lfo.connect(lg); lg.connect(gg.gain); lfo.start();
+    o.detune.value=(i%2?4:-4); o.connect(gg); gg.connect(lp); o.start();
+  });
+  droneGain.gain.linearRampToValueAtTime(muted?0:.8,AC.currentTime+4);
+  // gentle tanpura pluck pattern
+  setInterval(()=>{ if(!muted&&!music&&AC.state==='running') pluck([138.59,207.65,277.18,138.59][plk++%4]); },1400);
+}
+let plk=0;
+function env(g,t0,a,d,peak){g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(peak,t0+a);g.gain.exponentialRampToValueAtTime(.0001,t0+a+d);}
+function pluck(f){const t=AC.currentTime;const o=AC.createOscillator();o.type='triangle';o.frequency.value=f;const g=AC.createGain();env(g,t,.01,2.2,.08);o.connect(g);g.connect(master);o.start(t);o.stop(t+2.4);}
+function bell(f=1760,vol=.25){ if(!AC||muted) return; const t=AC.currentTime;
+  [[1,1],[2.76,.5],[5.4,.25],[8.9,.12]].forEach(([r,a])=>{const o=AC.createOscillator();o.frequency.value=f*r;const g=AC.createGain();env(g,t,.005,1.8/r,vol*a);o.connect(g);g.connect(master);o.start(t);o.stop(t+2.5);});}
+function noise(dur){const b=AC.createBuffer(1,AC.sampleRate*dur,AC.sampleRate);const d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const s=AC.createBufferSource();s.buffer=b;return s;}
+function strike(){ if(!AC||muted) return; const t=AC.currentTime;const s=noise(.5);const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.setValueAtTime(1200,t);f.frequency.exponentialRampToValueAtTime(4000,t+.12);f.Q.value=1.2;const g=AC.createGain();env(g,t,.01,.45,.5);s.connect(f);f.connect(g);g.connect(master);s.start(t);
+  setTimeout(()=>bell(2200,.18),250);}
+function whoosh(){ if(!AC||muted) return; const t=AC.currentTime;const s=noise(3);const f=AC.createBiquadFilter();f.type='bandpass';f.Q.value=2;f.frequency.setValueAtTime(300,t);f.frequency.exponentialRampToValueAtTime(2500,t+1.5);f.frequency.exponentialRampToValueAtTime(400,t+3);const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.8);g.gain.linearRampToValueAtTime(0,t+3);s.connect(f);f.connect(g);g.connect(master);s.start(t);}
+function boom(){ if(!AC||muted) return; const t=AC.currentTime;const s=noise(1.2);const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(120,t+.9);const g=AC.createGain();env(g,t,.01,1,.6);s.connect(f);f.connect(g);g.connect(master);s.start(t);
+  // crackle
+  for(let i=0;i<10;i++){const tt=t+.15+Math.random()*.9;const c=noise(.03);const cg=AC.createGain();env(cg,tt,.002,.03,.12);c.connect(cg);cg.connect(master);c.start(tt);} }
+/* Festive groove: dholak-style beat + sitar-ish melody in a Bhupali-style pentatonic (Sa Re Ga Pa Dha) */
+let music=null;
+const SA=277.18; const scale=[1,9/8,5/4,4/3,3/2,5/3,15/8,2,9/4,5/2,8/3,3]; // major: Sa Re Ga Ma Pa Dha Ni Sa' Re' Ga' Ma' Pa'
+// 64 sixteenth-steps; [degree, lengthInSteps]; -1 = rest. Upbeat call-and-response hook.
+const melody=[[7,2],[8,1],[9,1],[8,2],[7,2],[4,2],[5,2],[7,4],  [9,2],[8,1],[7,1],[5,2],[4,2],[2,2],[4,2],[5,4],
+              [7,2],[8,1],[9,1],[11,2],[9,2],[8,2],[7,2],[8,4],  [9,1],[8,1],[7,1],[5,1],[4,2],[2,2],[0,4],[-1,4]];
+const chords=[[0,2,4],[3,5,7],[4,6,8],[0,2,4]]; // I IV V I, one per 16 steps
+const bassline=[0,-1,-1,0,-1,-1,0,-1, 0,-1,-1,0,-1,-1,4,-1];
+function dhol(t,low){const o=AC.createOscillator();o.type='sine';const g=AC.createGain();
+  if(low){o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(55,t+.18);env(g,t,.004,.32,.7);}
+  else{o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(300,t+.06);env(g,t,.002,.12,.35);
+    const n=noise(.08);const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=3000;const ng=AC.createGain();env(ng,t,.002,.07,.2);n.connect(f);f.connect(ng);ng.connect(master);n.start(t);}
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+.4);}
+function sitar(t,f,vol){const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;const o2=AC.createOscillator();o2.type='square';o2.frequency.value=f*2;o2.detune.value=6;
+  const fl=AC.createBiquadFilter();fl.type='lowpass';fl.frequency.setValueAtTime(f*6,t);fl.frequency.exponentialRampToValueAtTime(f*1.5,t+.5);fl.Q.value=4;
+  const g=AC.createGain();env(g,t,.006,.9,vol);const g2=AC.createGain();g2.gain.value=.25;
+  o.connect(fl);o2.connect(g2);g2.connect(fl);fl.connect(g);g.connect(master);o.start(t);o2.start(t);o.stop(t+1);o2.stop(t+1);}
+function shaker(t,acc){const n=noise(.06);const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=6000;const g=AC.createGain();env(g,t,.002,acc?.06:.035,acc?.16:.08);n.connect(f);f.connect(g);g.connect(master);n.start(t);}
+function lead(t,f,dur,vol){ // shehnai-ish: bright saw + vibrato + slow filter
+  const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;const vib=AC.createOscillator();vib.frequency.value=5.5;const vg=AC.createGain();vg.gain.value=f*.012;vib.connect(vg);vg.connect(o.frequency);
+  const fl=AC.createBiquadFilter();fl.type='bandpass';fl.frequency.value=f*2.2;fl.Q.value=1.4;const g=AC.createGain();
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.03);g.gain.setValueAtTime(vol,t+dur-.05);g.gain.linearRampToValueAtTime(0,t+dur);
+  o.connect(fl);fl.connect(g);g.connect(master);vib.start(t);o.start(t);o.stop(t+dur+.05);vib.stop(t+dur+.05);}
+function pad(t,degs,dur){ // harmonium-like sustained chord
+  degs.forEach(d=>{const f=SA*scale[d]/2;[0,-7,7].forEach(det=>{const o=AC.createOscillator();o.type='triangle';o.frequency.value=f;o.detune.value=det;const g=AC.createGain();
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.045,t+.25);g.gain.setValueAtTime(.045,t+dur-.3);g.gain.linearRampToValueAtTime(0,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.1);});});}
+let melPos=0, melWait=0;
+function santoor(t,f,vol){ // soft struck-string shimmer
+  [0,3,-3].forEach(det=>{const o=AC.createOscillator();o.type='triangle';o.frequency.value=f;o.detune.value=det;const g=AC.createGain();env(g,t,.004,1.6,vol/3);o.connect(g);g.connect(master);o.start(t);o.stop(t+1.8);});}
+function tabla(t,kind){ // kind: 'ge' (bass), 'na' (ring), 'tin' (soft)
+  const o=AC.createOscillator();o.type='sine';const g=AC.createGain();
+  if(kind==='ge'){o.frequency.setValueAtTime(130,t);o.frequency.exponentialRampToValueAtTime(70,t+.25);env(g,t,.004,.35,.32);}
+  else if(kind==='na'){o.frequency.setValueAtTime(620,t);env(g,t,.002,.28,.16);const o2=AC.createOscillator();o2.frequency.value=1240;const g2=AC.createGain();env(g2,t,.002,.12,.05);o2.connect(g2);g2.connect(master);o2.start(t);o2.stop(t+.3);}
+  else {o.frequency.setValueAtTime(900,t);env(g,t,.002,.08,.08);}
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+.5);}
+// lively keherwa (8-beat) tabla: dha dhin na tin | na dhin dhin na — 16 eighth-steps per bar
+const keherwa=['ge','na','tin','na', 'ge','tin','na','tin', 'ge','na','tin','na', 'ge','ge','na','tin'];
+// flowing santoor arpeggio phrases in major pentatonic, one note per eighth, 64 steps (4 bars)
+const arp=[0,2,4,7, 4,2,0,2, 4,7,8,7, 4,2,4,-1,  3,5,7,9, 7,5,3,5, 7,9,10,9, 7,5,4,-1,
+           4,6,8,11, 8,6,4,6, 8,11,9,8, 6,4,6,-1, 0,2,4,7, 9,7,4,2, 0,2,4,2, 0,-1,-1,-1];
+function startMusic(){ if(music||!AC) return; const bpm=112, step=60/bpm/2; let i=0, next=AC.currentTime+.1;
+  if(droneGain)droneGain.gain.linearRampToValueAtTime(muted?0:.5,AC.currentTime+1.5); // tanpura stays under everything
+  const tick=()=>{ while(next<AC.currentTime+.45){ if(!muted){
+      const s=i%16;
+      tabla(next,keherwa[s]);                                           // tabla on every eighth, accents on ge
+      if(s%4===1||s%4===3)shaker(next,false);                           // light shaker off-beats
+      if(s===0)pad(next,chords[Math.floor(i/16)%4],step*16);            // harmonium chord per bar
+      const m=arp[i%arp.length]; if(m>=0)santoor(next,SA*scale[m],.15); // santoor arpeggio
+      if(s===8&&Math.random()<.6)santoor(next,SA*scale[[7,9,11][Math.floor(Math.random()*3)]]*2,.05); // sparkle
+      if(i%64===0)bell(SA*4,.12); if(i%64===32)bell(SA*6,.08);
+    } next+=step;i++; } };
+  music=setInterval(tick,100); tick(); }
+function stopMusic(){ if(music){clearInterval(music);music=null;} if(droneGain&&AC)droneGain.gain.linearRampToValueAtTime(muted?0:.8,AC.currentTime+1); }
+
+$('#mute').addEventListener('click',()=>{muted=!muted;$('#mute').textContent=muted?'×':'♪';$('#mute').setAttribute('aria-label',muted?'Unmute sound':'Mute sound');if(droneGain)droneGain.gain.linearRampToValueAtTime((muted||music)?0:.8,AC.currentTime+.5);});
+
+/* ---------- Stars / particles / fireworks on the sky canvas ---------- */
+const stars=[];for(let i=0;i<160;i++)stars.push({x:Math.random(),y:Math.random()*.8,r:Math.random()*1.3+.3,p:Math.random()*6.28});
+const sparks=[]; const rockets=[]; let fireworksOn=false, lastFw=0;
+function addSpark(x,y,vx,vy,life,col,size,o){sparks.push(Object.assign({x,y,vx,vy,life,max:life,col,size,px:x,py:y,g:.045,drag:.985,tw:0},o||{}));}
+const flashes=[];
+function burst(x,y,big){
+  const palettes=[[42,20],[330,350],[48,180],[28,42],[300,40],[190,48]];const [h1,h2]=palettes[Math.floor(Math.random()*palettes.length)];
+  const kind=Math.random();const scale=(big?1.5:1)*(Math.min(W,H)/700+.5);
+  flashes.push({x,y,r:60*scale,life:.25,max:.25});
+  if(kind<.4){ // peony: dense sphere with glitter
+    const n=Math.round(140*scale);for(let i=0;i<n;i++){const a=Math.random()*6.283,s=(Math.random()**.6)*4.2*scale+.6;const h=i%3?h1:h2;
+      addSpark(x,y,Math.cos(a)*s,Math.sin(a)*s,1.6+Math.random()*1.2,`hsl(${h+Math.random()*16} 100% ${62+Math.random()*25}%)`,2+Math.random()*1.6,{tw:Math.random()<.5?1:0});}
+  } else if(kind<.7){ // willow: long drooping gold trails
+    const n=Math.round(90*scale);for(let i=0;i<n;i++){const a=Math.random()*6.283,s=Math.random()*3.4*scale+1;
+      addSpark(x,y,Math.cos(a)*s,Math.sin(a)*s-.5,2.6+Math.random()*1.4,`hsl(${42+Math.random()*12} 100% ${70+Math.random()*20}%)`,1.6+Math.random(),{g:.03,drag:.975,trail:1});}
+  } else { // ring + core
+    const n=Math.round(80*scale);const tilt=Math.random()*.5+.75;for(let i=0;i<n;i++){const a=i/n*6.283,s=3.6*scale;
+      addSpark(x,y,Math.cos(a)*s,Math.sin(a)*s*tilt,1.6+Math.random()*.5,`hsl(${h1} 100% 72%)`,2.4,{tw:1});}
+    for(let i=0;i<50;i++){const a=Math.random()*6.283,s=Math.random()*1.6*scale;addSpark(x,y,Math.cos(a)*s,Math.sin(a)*s,1.2+Math.random()*.6,`hsl(${h2} 100% 85%)`,2,{});}
+  }
+  boom();
+  if(big||Math.random()<.35)setTimeout(()=>{for(let k=0;k<2;k++)setTimeout(()=>burst(x+(Math.random()-.5)*W*.2,y+(Math.random()-.5)*H*.1,false),k*260);},400);
+}
+let scene='intro';
+let journey=null; // {t0,dur}
+function loop(ts){
+  requestAnimationFrame(loop);
+  ctx.clearRect(0,0,W,H);
+  // sky gradient
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#07061a');g.addColorStop(.6,'#140f36');g.addColorStop(1,'#3a1e5a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // stars
+  const t=ts/1000;
+  for(const s of stars){const a=.35+.5*Math.abs(Math.sin(t*.7+s.p));ctx.globalAlpha=a;ctx.fillStyle='#fff2d6';ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,6.283);ctx.fill();}
+  ctx.globalAlpha=1;
+  // fireworks (drawn before the globe so they sit behind it)
+  if(fireworksOn&&ts-lastFw>(reduce?1800:520)){lastFw=ts;const x=W*(.12+Math.random()*.76),y=H*(.1+Math.random()*.32);rockets.push({x:x,y:H*.95,tx:x,ty:y,big:Math.random()<.3});}
+  ctx.globalCompositeOperation='lighter';
+  for(let i=rockets.length-1;i>=0;i--){const r=rockets[i];r.y-=(r.y-r.ty)*.09+5;r.x+=Math.sin(ts/80+i)*.6;addSpark(r.x,r.y,(Math.random()-.5)*.6,.8,.45,'#ffe2a0',1.6,{g:.02});if(r.y<=r.ty+8){burst(r.x,r.y,r.big);rockets.splice(i,1);}}
+  for(let i=flashes.length-1;i>=0;i--){const f=flashes[i];f.life-=1/60;if(f.life<=0){flashes.splice(i,1);continue;}const a=f.life/f.max;const g2=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r*(1.6-a));g2.addColorStop(0,`rgba(255,250,230,${.55*a})`);g2.addColorStop(1,'rgba(255,200,120,0)');ctx.fillStyle=g2;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(1.6-a),0,6.283);ctx.fill();}
+  const dt=1/60;
+  for(let i=sparks.length-1;i>=0;i--){const p=sparks[i];p.life-=dt;if(p.life<=0){sparks.splice(i,1);continue;}
+    p.px=p.x;p.py=p.y;p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.vx*=p.drag;p.vy*=p.drag;
+    const k=p.life/p.max;let a=k;if(p.tw&&k<.7)a*=.35+.65*Math.abs(Math.sin(ts/40+p.x));ctx.globalAlpha=Math.max(0,a);
+    if(p.trail){ctx.strokeStyle=p.col;ctx.lineWidth=p.size*(k+.3);ctx.beginPath();ctx.moveTo(p.px-p.vx*3,p.py-p.vy*3);ctx.lineTo(p.x,p.y);ctx.stroke();}
+    ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.size*(k+.3),0,6.283);ctx.fill();}
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+  if(scene==='journey'&&journey) drawGlobe(ts);
+  fctx.clearRect(0,0,W,H);
+  if(flyer) drawFlyer(ts);
+}
+requestAnimationFrame(loop);
+
+/* ---------- Flying flame (lift-off from Sydney, arrival in Joburg) ---------- */
+let flyer=null; // {x0,y0,x1,y1,cx,cy,t0,dur,hover,onDone}
+const fsparks=[];
+function flameAt(x,y,r){const c=fctx;const fg=c.createRadialGradient(x,y,0,x,y,r);fg.addColorStop(0,'#fff6cf');fg.addColorStop(.25,'#ffd04a');fg.addColorStop(.6,'rgba(255,106,26,.6)');fg.addColorStop(1,'rgba(255,60,0,0)');c.fillStyle=fg;c.beginPath();c.arc(x,y,r,0,6.283);c.fill();
+  // tail sparks on the top layer
+  for(let i=fsparks.length-1;i>=0;i--){const p=fsparks[i];p.life-=1/60;if(p.life<=0){fsparks.splice(i,1);continue;}p.x+=p.vx;p.y+=p.vy;p.vy+=.03;c.globalAlpha=p.life/p.max;c.fillStyle=p.col;c.beginPath();c.arc(p.x,p.y,p.size*(p.life/p.max+.3),0,6.283);c.fill();}
+  c.globalAlpha=1;}
+function drawFlyer(ts){
+  const f=flyer;let x,y;
+  if(f.hover){x=f.x1;y=f.y1+Math.sin(ts/400)*6;}
+  else{const p=Math.min(1,(ts-f.t0)/f.dur);const e=p<.5?2*p*p:-1+(4-2*p)*p;
+    x=(1-e)*(1-e)*f.x0+2*(1-e)*e*f.cx+e*e*f.x1; y=(1-e)*(1-e)*f.y0+2*(1-e)*e*f.cy+e*e*f.y1;
+    if(p>=1){const cb=f.onDone;f.onDone=null;if(f.stay){f.hover=true;}else flyer=null;if(cb)cb();}}
+  for(let i=0;i<3;i++)fsparks.push({x,y,vx:(Math.random()-.5)*1.6,vy:(Math.random()-.5)*1.6+.3,life:.5+Math.random()*.4,max:.9,col:i?'#ffd27a':'#ff8a3a',size:1.6});
+  flameAt(x,y,28+Math.sin(ts/90)*3);
+}
+function elCenter(el){const r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();return {x:r.left-s.left+r.width/2,y:r.top-s.top+r.height*.45};}
+
+/* ---------- Globe ---------- */
+const SYD={lat:-33.87,lon:151.21}, JNB={lat:-26.20,lon:28.05}, KM=11044;
+const d2r=Math.PI/180;
+function toVec(p){const la=p.lat*d2r,lo=p.lon*d2r;return [Math.cos(la)*Math.cos(lo),Math.cos(la)*Math.sin(lo),Math.sin(la)];}
+function slerp(a,b,t){const dot=a[0]*b[0]+a[1]*b[1]+a[2]*b[2];const om=Math.acos(Math.min(1,Math.max(-1,dot)));const s=Math.sin(om);const k1=Math.sin((1-t)*om)/s,k2=Math.sin(t*om)/s;return [a[0]*k1+b[0]*k2,a[1]*k1+b[1]*k2,a[2]*k1+b[2]*k2];}
+// project: rotate so that lon0 faces viewer, tilt lat0
+function project(v,lon0,lat0,R,cx,cy){
+  const lo=-lon0*d2r,la=lat0*d2r;
+  let x=v[0]*Math.cos(lo)-v[1]*Math.sin(lo), y=v[0]*Math.sin(lo)+v[1]*Math.cos(lo), z=v[2];
+  // tilt around x axis
+  let y2=y, z2=z*Math.cos(la)-x*Math.sin(la), x2=z*Math.sin(la)+x*Math.cos(la);
+  return {sx:cx+y2*R, sy:cy-z2*R, vis:x2>0, depth:x2};
+}
+const trail=[];
+function drawGlobe(ts){
+  const p=Math.min(1,(ts-journey.t0)/journey.dur);
+  const e=p<.5?2*p*p:-1+(4-2*p)*p; // ease in-out
+  const R=Math.min(W,H)*.34, cx=W/2, cy=H*.42;
+  const lon0=SYD.lon+(JNB.lon-SYD.lon)*e, lat0=-32-8*Math.sin(e*Math.PI);
+  // sphere
+  const sg=ctx.createRadialGradient(cx-R*.4,cy-R*.4,R*.1,cx,cy,R);sg.addColorStop(0,'#2b2060');sg.addColorStop(1,'#0b0a24');
+  ctx.fillStyle=sg;ctx.beginPath();ctx.arc(cx,cy,R,0,6.283);ctx.fill();
+  // atmosphere
+  ctx.strokeStyle='rgba(255,179,64,.35)';ctx.lineWidth=2;ctx.stroke();
+  // graticule
+  ctx.strokeStyle='rgba(255,242,214,.13)';ctx.lineWidth=1;
+  for(let lon=-180;lon<180;lon+=20){ctx.beginPath();let first=true;for(let lat=-90;lat<=90;lat+=3){const q=project(toVec({lat,lon}),lon0,lat0,R,cx,cy);if(!q.vis){first=true;continue;}if(first){ctx.moveTo(q.sx,q.sy);first=false;}else ctx.lineTo(q.sx,q.sy);}ctx.stroke();}
+  for(let lat=-60;lat<=60;lat+=20){ctx.beginPath();let first=true;for(let lon=-180;lon<=180;lon+=3){const q=project(toVec({lat,lon}),lon0,lat0,R,cx,cy);if(!q.vis){first=true;continue;}if(first){ctx.moveTo(q.sx,q.sy);first=false;}else ctx.lineTo(q.sx,q.sy);}ctx.stroke();}
+  // city markers
+  const A=toVec(SYD),B=toVec(JNB);
+  for(const [v,name] of [[A,'Sydney'],[B,'Johannesburg']]){const q=project(v,lon0,lat0,R,cx,cy);if(q.vis){ctx.fillStyle='#ffb340';ctx.beginPath();ctx.arc(q.sx,q.sy,4,0,6.283);ctx.fill();ctx.fillStyle='rgba(255,242,214,.85)';ctx.font='600 12px Nunito, sans-serif';ctx.textAlign='center';ctx.fillText(name,q.sx,q.sy-10);}}
+  // arc path (dotted)
+  ctx.setLineDash([3,6]);ctx.strokeStyle='rgba(255,179,64,.45)';ctx.beginPath();let f=true;for(let i=0;i<=60;i++){const v=slerp(A,B,i/60);const q=project(v,lon0,lat0,R*1.06,cx,cy);if(!q.vis){f=true;continue;}if(f){ctx.moveTo(q.sx,q.sy);f=false;}else ctx.lineTo(q.sx,q.sy);}ctx.stroke();ctx.setLineDash([]);
+  // flame comet
+  const v=slerp(A,B,e);const lift=1.06+.12*Math.sin(e*Math.PI);const q=project(v,lon0,lat0,R*lift,cx,cy);
+  trail.push({x:q.sx,y:q.sy});if(trail.length>40)trail.shift();
+  for(let i=0;i<trail.length;i++){const a=i/trail.length;ctx.globalAlpha=a*.6;ctx.fillStyle='#ffb340';ctx.beginPath();ctx.arc(trail[i].x,trail[i].y,2+a*4,0,6.283);ctx.fill();}
+  ctx.globalAlpha=1;
+  const fg=ctx.createRadialGradient(q.sx,q.sy,0,q.sx,q.sy,26);fg.addColorStop(0,'#fff6cf');fg.addColorStop(.25,'#ffd04a');fg.addColorStop(.6,'rgba(255,106,26,.6)');fg.addColorStop(1,'rgba(255,60,0,0)');
+  ctx.fillStyle=fg;ctx.beginPath();ctx.arc(q.sx,q.sy,26,0,6.283);ctx.fill();
+  if(Math.random()<.6)addSpark(q.sx,q.sy,(Math.random()-.5)*1.2,(Math.random()-.5)*1.2,.6,'#ffd27a',1.6);
+  $('#km').firstChild.nodeValue=Math.round(KM*e).toLocaleString('en-AU');
+  if(p>=1&&!journey.done){journey.done=true;setTimeout(()=>go('joburg'),900);}
+}
+
+/* ---------- Johannesburg skyline on its own canvas ---------- */
+const jc=$('#jcity');
+function drawJoburg(){
+  const w=stage.clientWidth,h=Math.round(stage.clientHeight*.5);jc.width=w*DPR;jc.height=h*DPR;jc.style.height=h+'px';
+  const c=jc.getContext('2d');c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0,w,h);
+  const base=h*.74, BLD='#231a52', TOW='#2e2470', WIN='rgba(255,210,120,.75)';
+  let seed=7;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+  const windows=(x0,y0,bw,bh,step)=>{c.fillStyle=WIN;for(let yy=y0+6;yy<y0+bh-4;yy+=step)for(let xx=x0+4;xx<x0+bw-4;xx+=step)if(rnd()>.5)c.fillRect(xx,yy,3,4);};
+  // generic blocks
+  let x=0;
+  while(x<w){const bw=22+rnd()*40,bh=30+rnd()*(h*.3);c.fillStyle=BLD;c.fillRect(x,base-bh,bw,bh);windows(x,base-bh,bw,bh,9);x+=bw+5;}
+  // Carlton Centre (left)
+  const cxx=w*.12;c.fillStyle=TOW;c.fillRect(cxx-22,base-h*.66,44,h*.66);windows(cxx-22,base-h*.66,44,h*.66,8);
+  c.fillStyle='#ff3d00';c.beginPath();c.arc(cxx,base-h*.66-3,2.5,0,6.283);c.fill();
+  // Hillbrow Tower (right)
+  const hx=w*.78;c.fillStyle=TOW;c.fillRect(hx-8,base-h*.86,16,h*.86);
+  c.fillStyle='#3a2d80';c.beginPath();c.ellipse(hx,base-h*.6,26,20,0,0,6.283);c.fill();
+  c.fillStyle=WIN;for(let a=0;a<12;a++){c.fillRect(hx-24+a*4.2,base-h*.6-2,2.4,4);}
+  c.fillStyle='#4a3b98';c.fillRect(hx-5,base-h*.98,10,h*.14);c.fillStyle=TOW;c.fillRect(hx-1.5,base-h*1.0-h*.1,3,h*.12);
+  c.fillStyle='#ff3d00';c.beginPath();c.arc(hx,base-h*1.1,3,0,6.283);c.fill();
+  // Ponte tower (cylinder, far right)
+  const px=w*.92;c.fillStyle=TOW;c.fillRect(px-28,base-h*.72,56,h*.72);c.fillStyle='#3a2d80';c.beginPath();c.ellipse(px,base-h*.72,28,7,0,0,6.283);c.fill();
+  windows(px-26,base-h*.72,52,h*.72,8);
+  // rooftop ledge where diyas go
+  c.fillStyle='#1a1240';c.fillRect(0,base,w,h-base);c.fillStyle='#5a4a9a';c.fillRect(0,base-3,w,5);
+  c.fillStyle='rgba(255,210,120,.08)';c.fillRect(0,base+2,w,h-base);
+}
+
+/* ---------- Video clips ---------- */
+const vwrap=$('#vwrap'), vid=$('#vid');
+const clips={sydney:'vid/sydney.mp4',joburg:'vid/joburg.mp4'};
+const pre={};
+function preloadClips(){for(const k in clips){try{const v=document.createElement('video');v.preload='auto';v.muted=true;v.src=clips[k];v.load();pre[k]=v;}catch(e){}}}
+function playClip(name,onEnd){
+  let done=false;const finish=()=>{if(done)return;done=true;vwrap.classList.remove('on');setTimeout(()=>{vid.pause();vid.removeAttribute('src');vid.load();},900);onEnd&&onEnd();};
+  vid.onended=finish;vid.onerror=finish;
+  vid.src=clips[name];vid.currentTime=0;vwrap.classList.add('on');
+  const p=vid.play();if(p&&p.catch)p.catch(()=>setTimeout(finish,300));
+  setTimeout(finish,12000); // safety net
+}
+
+/* ---------- Scenes ---------- */
+function go(name){scene=name;document.querySelectorAll('.scene').forEach(s=>s.classList.toggle('on',s.id==='s-'+name));
+  if(name==='sydney'){setTimeout(()=>$('#b1').classList.add('show'),900);}
+  if(name==='journey'){trail.length=0;journey={t0:performance.now()+200,dur:reduce?4000:11000,done:false};whoosh();setTimeout(whoosh,3200);setTimeout(whoosh,6400);startMusic();setTimeout(()=>{fireworksOn=true;},1200);}
+  if(name==='joburg'){fireworksOn=false;received=false;
+    setTimeout(()=>{const c=elCenter($('#d-jnb'));whoosh();
+      flyer={x0:-60,y0:H*.08,x1:c.x,y1:c.y-70,cx:W*.3,cy:H*.05,t0:performance.now(),dur:reduce?800:2200,stay:true,onDone:()=>{$('#receive').hidden=false;bell(1568,.2);}};},600);}
+  if(name==='message'){fireworksOn=true;$('#rangoli').classList.add('show');bell(1760,.3);setTimeout(()=>bell(2093,.25),400);setTimeout(()=>bell(2637,.2),800);}
+}
+$('#start').addEventListener('click',()=>{audioInit();if(AC.state==='suspended')AC.resume();$('#mute').style.display='block';bell(1568,.3);preloadClips();go('sydney');});
+
+$('#light1').addEventListener('click',e=>{
+  const b=e.currentTarget;b.disabled=true;b.textContent='Lighting…';
+  // the animated clip: Yuvie strikes a match and lights the diya
+  playClip('sydney',()=>{
+    $('#d-syd').classList.add('lit');b.textContent='Sending it to Joburg…';
+    const c=elCenter($('#d-syd'));for(let i=0;i<24;i++)addSpark(c.x,c.y-10,(Math.random()-.5)*3,-Math.random()*3,.8,'#ffd27a',1.8);
+    setTimeout(()=>{ // flame lifts off the diya and flies out over the harbour
+      const c=elCenter($('#d-syd'));whoosh();
+      flyer={x0:c.x,y0:c.y-14,x1:W+60,y1:-40,cx:c.x+W*.15,cy:H*.1,t0:performance.now(),dur:reduce?800:1900,onDone:()=>{go('journey');setTimeout(()=>{b.hidden=true;},1000);}};
+      setTimeout(()=>$('#d-syd').classList.remove('lit'),500);
+    },1200);
+  });
+  setTimeout(strike,3300); // match strike lands with the clip
+});
+
+/* Joburg: receive the light */
+let received=false;
+$('#receive').addEventListener('click',()=>{
+  $('#receive').hidden=true;const c=elCenter($('#d-jnb'));
+  flyer={x0:flyer?flyer.x1:c.x,y0:flyer?flyer.y1:c.y-70,x1:c.x,y1:c.y-14,cx:c.x,cy:c.y-40,t0:performance.now(),dur:600,onDone:()=>{
+    // the animated clip: the ember settles into Mum & Dad's diya
+    setTimeout(()=>bell(1568,.2),3800);
+    playClip('joburg',()=>{
+      $('#d-jnb').classList.add('lit');received=true;bell(1320,.3);setTimeout(()=>bell(1976,.25),250);setTimeout(()=>bell(2637,.2),500);
+      for(let i=0;i<40;i++)addSpark(c.x,c.y-10,(Math.random()-.5)*4,-Math.random()*4,1,i%2?'#ffd27a':'#ff8a3a',2);
+      setTimeout(()=>$('#b2').classList.add('show'),400);
+      setTimeout(()=>{$('#jhint').textContent='Now tap the rooftop to light more diyas';},1800);
+    });
+  }};
+});
+
+/* Joburg diyas */
+const holder=$('#diyas');let lit=0;const placed=[];
+function mkDiya(x,y,scale){const d=document.createElement('div');d.className='diya';d.style.left=x+'px';d.style.top=y+'px';d.style.transform=`translate(-50%,-70%) scale(${scale})`;d.innerHTML='<div class="glow"></div><div class="bowl"></div><div class="rim"></div><div class="flame"></div>';holder.appendChild(d);return d;}
+holder.addEventListener('pointerdown',e=>{
+  if(scene!=='joburg'||!received)return;const r=stage.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;
+  const minY=H*.875;const yy=Math.max(minY,Math.min(H-36,y));
+  const d=mkDiya(x,yy,.9+Math.random()*.4);requestAnimationFrame(()=>d.classList.add('lit'));placed.push(d);lit++;
+  bell([1320,1480,1568,1760,1976][lit%5],.22);
+  if(lit>=5){$('#lightall').hidden=false;$('#jhint').textContent='Beautiful. Keep going, or light them all';}
+});
+$('#lightall').addEventListener('click',()=>{
+  $('#lightall').hidden=true;$('#jhint').textContent='Happy Diwali, Johannesburg';
+  const cols=Math.max(8,Math.floor(W/56));let i=0;
+  const ys=[H*.885,H*.945];
+  for(const y of ys){for(let c=0;c<cols;c++){const x=(c+.5)*(W/cols)+(Math.random()-.5)*12;const d=mkDiya(x,y+(Math.random()-.5)*10,.7+Math.random()*.4);
+    setTimeout(()=>{d.classList.add('lit');if(i%4===0)bell(1320+Math.random()*900,.12);},(reduce?20:60)*i++);}}
+  const total=(reduce?20:60)*i;
+  setTimeout(()=>{fireworksOn=true;},total+300);
+  setTimeout(()=>go('message'),total+(reduce?2500:5500));
+});
+
+$('#replay').addEventListener('click',()=>{fireworksOn=false;stopMusic();flyer=null;vwrap.classList.remove('on');received=false;sparks.length=0;rockets.length=0;holder.innerHTML='';lit=0;$('#d-syd').classList.remove('lit');$('#d-jnb').classList.remove('lit');$('#receive').hidden=true;$('#lightall').hidden=true;document.querySelectorAll('.bubble').forEach(b=>b.classList.remove('show'));$('#light1').hidden=false;$('#light1').disabled=false;$('#light1').textContent='Tap to light our diya';$('#jhint').textContent='Johannesburg, South Africa';$('#rangoli').classList.remove('show');go('sydney');});
+
+/* Rangoli (generated) */
+(function(){const s=$('#rangoli');let out='';const cols=['#ffb340','#d63a8a','#ff6a1a','#fff2d6'];
+  for(let ring=0;ring<4;ring++){const n=8+ring*4,r=22+ring*20;for(let i=0;i<n;i++){const a=i/n*360;out+=`<ellipse cx="0" cy="${-r}" rx="${6+ring*2}" ry="${12+ring*3}" fill="${cols[(ring+i)%4]}" opacity=".9" transform="rotate(${a})"/>`;}
+    out+=`<circle r="${r-8}" fill="none" stroke="${cols[ring%4]}" stroke-width="1.2" stroke-dasharray="3 4" opacity=".7"/>`;}
+  out+='<circle r="10" fill="#ffd27a"/>';s.innerHTML=out;})();
+
+resize();
+})();
+</script>
+
+</body>
+</html>
